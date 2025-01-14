@@ -4,56 +4,62 @@ using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
-    public int maxHeath = 100;
-    public int health;
+    public int maxHealth = 100;
+    private int currentHealth;
     private Animator anim;
-    public Image healBar; // Đối tượng thanh máu
+    public Image healBar; // Thanh máu UI
     public GameManagerScript gameManager;
-    AudioManagerScript audioManager;
+    private AudioManagerScript audioManager;
 
     private void Awake()
     {
-        audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManagerScript>();
+        audioManager = GameObject.FindGameObjectWithTag("Audio")?.GetComponent<AudioManagerScript>();
     }
 
-    void Start()
+    private void Start()
     {
-        health = maxHeath;
+        currentHealth = maxHealth;
         anim = GetComponent<Animator>();
-        
+
         if (healBar == null)
         {
             Debug.LogError("healBar chưa được gán trong Inspector!");
         }
+        UpdateHealthUI();
     }
 
-    void Update()
+    private void UpdateHealthUI()
     {
-        // Cập nhật thanh máu
-        healBar.fillAmount = Mathf.Clamp((float)health / maxHeath, 0f, 1f);
-        if (healBar == null)
+        if (healBar != null)
         {
-            Debug.LogError("healBar chưa được gán trong Inspector!");
+            healBar.fillAmount = Mathf.Clamp((float)currentHealth / maxHealth, 0f, 1f);
         }
     }
 
     public void takeDamagePlayer(int damage)
     {
-        health -= damage;
+        currentHealth -= damage;
         anim.SetTrigger("hurt");
-        audioManager.playSFX(audioManager.takeHit);
-        if (health <= 0)
+        audioManager?.playSFX(audioManager.takeHit);
+
+        UpdateHealthUI();
+
+        if (currentHealth <= 0)
         {
             Die();
         }
     }
 
-    void Die()
+    private void Die()
     {
         anim.SetBool("isDead", true);
         Destroy(gameObject, 2f);
-        
-
         SceneManager.LoadScene("LoseMenu");
+    }
+
+    public void healthPack(int healAmount)
+    {
+        currentHealth = Mathf.Min(currentHealth + healAmount, maxHealth); 
+        UpdateHealthUI();
     }
 }
